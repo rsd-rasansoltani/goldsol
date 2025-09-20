@@ -3,40 +3,40 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>GoldPOS — طلافروشی سلطانی</title>
-  <!-- Tailwind via CDN for quick beautiful UI -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Chart.js for نمودارها -->
+  <title>GoldPOS.4ba.ir</title>
+  <script>
+    // متن‌ها
+    const titles = [
+      "GoldPOS With 4BA — طلافروشی با فوربا",
+      "ساخته شده با راسان دیزاین"
+    ];
+    let index = 0;
 
+    // هر 5 ثانیه متن title تغییر می‌کند
+    setInterval(() => {
+      index = (index + 1) % titles.length;
+      document.title = titles[index];
+    }, 5000);
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* Small custom tweaks */
     body { font-family: 'Vazirmatn', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }
     .glass { background: rgba(255, 255, 255, 0.06); backdrop-filter: blur(6px); }
     .dir-rtl { direction: rtl; }
     table td, table th { padding: 0.5rem; }
     .small { font-size: 0.85rem; }
     @media print {
-  body * {
-    visibility: hidden;
-  }
-  #invoice, #invoice * {
-    visibility: visible;
-  }
-  #invoice {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-  }
-}
-
+      body * { visibility: hidden; }
+      #invoice, #invoice * { visibility: visible; }
+      #invoice { position: absolute; top: 0; left: 0; width: 100%; }
+    }
   </style>
 </head>
 <body class="bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-slate-100 min-h-screen">
   <div class="max-w-6xl mx-auto p-6">
     <header class="flex items-center justify-between mb-6">
       <div>
-        <h1 class="text-2xl font-bold">GoldPOS — طلافروشی سلطانی</h1>
+        <h1 class="text-2xl font-bold">GoldPOS With 4BA — طلافروشی با فوربا</h1>
         <p class="text-sm text-slate-300">ساخته شده با راسان دیزاین </p>
       </div>
       <div class="flex items-center gap-3">
@@ -56,79 +56,60 @@
           </div>
           <div>
             <label class="block small mb-1">تاریخ</label>
-            <input id="saleDate" type="date" class="w-full p-2 rounded-md bg-slate-800">
+            <input id="saleDate" type="datetime-local" class="w-full p-2 rounded-md bg-slate-800">
           </div>
           <div>
             <label class="block small mb-1">وزن (گرم)</label>
             <input id="weight" type="number" step="0.001" class="w-full p-2 rounded-md bg-slate-800" placeholder="مثال: 3.45">
           </div>
           <div>
-            <label class="block small mb-1">عیار (عیار)</label>
+            <label class="block small mb-1">عیار</label>
             <select id="karat" class="w-full p-2 rounded-md bg-slate-800">
               <option value="24">24</option>
-              <option value="23">23</option>
               <option value="22">22</option>
               <option value="21">21</option>
               <option value="18" selected>18</option>
               <option value="14">14</option>
             </select>
           </div>
-
           <div>
             <label class="block small mb-1">قیمت روز هر گرم (تومان)</label>
             <input id="pricePerGram" type="number" class="w-full p-2 rounded-md bg-slate-800" placeholder="0">
           </div>
           <div>
-            <label class="block small mb-1">اجرت ساخت (تومان) — کل یا هر گرم</label>
-            <input id="makingCharge" type="number" class="w-full p-2 rounded-md bg-slate-800" placeholder="مثال: 20000">
-            <label class="small text-slate-400"><input id="makingPerGram" type="checkbox" class="ml-2"> محاسبه به ازای هر گرم</label>
+            <label class="block small mb-1">اجرت ساخت (٪)</label>
+            <input id="makingPercent" type="number" class="w-full p-2 rounded-md bg-slate-800" placeholder="مثال: 10">
           </div>
-
           <div>
             <label class="block small mb-1">درصد سود فروشنده (%)</label>
-            <input id="profitPercent" type="number" value="5" class="w-full p-2 rounded-md bg-slate-800">
+            <input id="profitPercent" type="number" value="7" class="w-full p-2 rounded-md bg-slate-800">
           </div>
           <div>
             <label class="block small mb-1">مالیات (٪)</label>
             <input id="vatPercent" type="number" value="9" class="w-full p-2 rounded-md bg-slate-800">
           </div>
-
           <div class="md:col-span-2">
             <label class="block small mb-1">توضیحات / شماره فاکتور</label>
             <input id="note" class="w-full p-2 rounded-md bg-slate-800" placeholder="مثال: فروش عادی - فاکتور 123">
           </div>
         </div>
-
         <div class="mt-4 flex gap-3">
           <button id="calcPrice" class="px-4 py-2 bg-emerald-500 rounded-md font-semibold">محاسبه قیمت</button>
           <button id="saveSale" class="px-4 py-2 bg-indigo-600 rounded-md font-semibold">ثبت فروش</button>
           <button id="previewInvoice" class="px-4 py-2 bg-sky-500 rounded-md font-semibold">پیش‌نمایش فاکتور</button>
-          <button id="addToInventory" class="px-4 py-2 bg-yellow-600 rounded-md font-semibold">اضافه به انبار</button>
+          <input type="file" id="importCsv" accept=".csv" class="px-3 py-2 bg-slate-700 rounded-md small">
         </div>
-
+        
         <div id="resultCard" class="mt-5 p-4 bg-slate-900 rounded-lg border border-slate-700 hidden">
           <h3 class="font-semibold">جزئیات قیمت</h3>
           <div id="breakdown" class="mt-2 small text-slate-300"></div>
         </div>
       </section>
 
-      <!-- RIGHT: Settings / Inventory / Reports -->
+      <!-- RIGHT: Reports -->
       <aside class="glass p-5 rounded-2xl">
-        <h2 class="text-lg font-semibold mb-3">ابزارها و گزارش</h2>
-
+        <h2 class="text-lg font-semibold mb-3">گزارش</h2>
         <div class="space-y-3">
-          <div class="bg-slate-800 p-3 rounded-md">
-            <div class="flex items-center justify-between">
-              <div>
-                <div class="text-sm text-slate-300">موجودی کل (قطعات)</div>
-                <div id="inventoryCount" class="text-xl font-bold">0</div>
-              </div>
-              <div class="text-right">
-                <button id="openInventory" class="px-3 py-1 bg-slate-700 rounded-md small">مدیریت انبار</button>
-              </div>
-            </div>
-          </div>
-
           <div class="bg-slate-800 p-3 rounded-md">
             <div class="flex items-center justify-between">
               <div>
@@ -140,7 +121,6 @@
               </div>
             </div>
           </div>
-
           <div class="bg-slate-800 p-3 rounded-md">
             <div class="flex items-center justify-between">
               <div>
@@ -152,113 +132,70 @@
               </div>
             </div>
           </div>
-
         </div>
-
         <hr class="my-4 border-slate-700">
         <canvas id="salesChart" height="180"></canvas>
       </aside>
     </main>
 
-
-    <!-- Modals: Inventory, Transactions, Invoice -->
+    <!-- Transactions Modal -->
     <div id="modals" class="fixed inset-0 flex items-center justify-center p-4 pointer-events-none">
-      <!-- Inventory Modal -->
-      <div id="inventoryModal" class="max-w-3xl w-full pointer-events-auto hidden">
-        <div class="bg-slate-900 rounded-xl p-5">
-          <div class="flex justify-between items-center mb-3">
-            <h3 class="text-lg font-semibold">مدیریت انبار</h3>
-            <div class="flex gap-2">
-              <button id="closeInventory" class="px-3 py-1 bg-slate-700 rounded-md">بستن</button>
-            </div>
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <input id="invName" placeholder="نام کالا یا قطعه" class="p-2 rounded-md bg-slate-800">
-            <input id="invWeight" placeholder="وزن (g)" class="p-2 rounded-md bg-slate-800" type="number" step="0.001">
-            <input id="invKarat" placeholder="عیار" class="p-2 rounded-md bg-slate-800" type="number" value="18">
-            <input id="invQty" placeholder="تعداد" class="p-2 rounded-md bg-slate-800" type="number" value="1">
-            <button id="addInventoryItem" class="col-span-3 px-4 py-2 bg-emerald-600 rounded-md">افزودن به انبار</button>
-          </div>
-          <div class="mt-4 overflow-auto max-h-60">
-            <table class="w-full small text-left">
-              <thead class="text-slate-300 text-sm">
-                <tr><th>نام</th><th>وزن</th><th>عیار</th><th>تعداد</th><th></th></tr>
-              </thead>
-              <tbody id="inventoryTable" class="text-slate-200"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- Transactions Modal -->
       <div id="txnsModal" class="max-w-4xl w-full pointer-events-auto hidden">
         <div class="bg-slate-900 rounded-xl p-5">
           <div class="flex justify-between items-center mb-3">
             <h3 class="text-lg font-semibold">لیست تراکنش‌ها</h3>
-            <div class="flex gap-2">
-              <button id="closeTxns" class="px-3 py-1 bg-slate-700 rounded-md">بستن</button>
-            </div>
+            <button id="closeTxns" class="px-3 py-1 bg-slate-700 rounded-md">بستن</button>
           </div>
           <div class="overflow-auto max-h-72">
             <table class="w-full small text-right text-slate-200">
               <thead class="text-slate-300 text-sm">
-                <tr><th>تاریخ</th><th>مشتری</th><th>وزن</th><th>عیار</th><th>مبلغ نهایی</th><th></th></tr>
+                <tr>
+                  <th>تاریخ و ساعت</th>
+                  <th>مشتری</th>
+                  <th>وزن</th>
+                  <th>عیار</th>
+                  <th>جمع قبل سود</th>
+                  <th>سود</th>
+                  <th>مالیات</th>
+                  <th>مبلغ نهایی</th>
+                </tr>
               </thead>
               <tbody id="txnsTable"></tbody>
             </table>
           </div>
         </div>
       </div>
-
-      <!-- Invoice Modal -->
-      <div id="invoiceModal" class="max-w-2xl w-full pointer-events-auto hidden">
-        <div class="bg-white rounded-xl p-5 text-slate-900 dir-rtl" id="invoiceContent">
-          <div class="flex justify-between items-center mb-4">
-            <div>
-              <h3 class="text-xl font-semibold">فاکتور — طلافروشی سلطانی</h3>
-              <div id="invMeta" class="text-sm text-slate-600"></div>
-            </div>
-            <div class="text-right">
-              <div id="invTotal" class="text-lg font-bold"></div>
-              <div class="small text-slate-500">تومان</div>
-            </div>
-          </div>
-          <div id="invBody" class="small text-slate-700"></div>
-          <div class="mt-4 flex gap-2 justify-end">
-            <button id="printInvoice" class="px-3 py-1 bg-slate-800 text-white rounded-md">پرینت</button>
-            <button id="closeInvoice" class="px-3 py-1 bg-slate-700 rounded-md">بستن</button>
-          </div>
-        </div>
-      </div>
     </div>
 
-    <footer class="mt-8 text-center text-slate-400 small"> نسخهٔ وب — توسط راسان دیزاین طراحی شده برای "طلافروشی سلطانی" • ذخیره محلی</footer>
+          <!-- بخش پیش‌فاکتور -->
+      <div id="invoice" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center p-4">
+        <div class="bg-white text-black rounded-xl p-6 w-full max-w-xl overflow-auto">
+          <button onclick="document.getElementById('invoice').classList.add('hidden')" class="mb-3 px-3 py-1 bg-red-500 rounded">بستن</button>
+          <div id="invoiceContent"></div>
+          <button onclick="window.print()" class="mt-3 px-4 py-2 bg-green-500 rounded">چاپ فاکتور</button>
+        </div>
+      </div>
+
+
+    <footer class="mt-8 text-center text-slate-400 small">GoldPOS With 4BA ___ طلافروشی با فوربا ; <br> کلیه حقوق این وب اپلیکیشن متعلق به راسان دیزاین است</footer>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    // ---------- Utilities ----------
     const $ = id => document.getElementById(id);
-    const ls = { txns: 'gs_txns', inv: 'gs_inv', price: 'gs_price' };
-
+    const ls = { txns: 'gs_txns', price: 'gs_price' };
     function currency(n){ return Number(n).toLocaleString('fa-IR'); }
 
-    // ---------- State ----------
     let txns = JSON.parse(localStorage.getItem(ls.txns) || '[]');
-    let inv = JSON.parse(localStorage.getItem(ls.inv) || '[]');
+    $('pricePerGram').value = localStorage.getItem(ls.price) || 0;
 
-    // Init UI values
-    $('pricePerGram').value = localStorage.getItem(ls.price) || $('pricePerGram').value;
-    $('saleDate').valueAsDate = new Date();
-
-    // ---------- Price calculation ----------
     function purityFactor(karat){ return Number(karat)/24; }
-
-    function compute({weight, karat, pricePerGram, making, makingPerGram, profitPercent, vatPercent}){
+    function compute({weight, karat, pricePerGram, makingPercent, profitPercent, vatPercent}){
       weight = Number(weight);
       pricePerGram = Number(pricePerGram);
       const purity = purityFactor(karat);
-      const goldValue = weight * purity * pricePerGram; // ارزش طلای خالص
-      const makingTotal = makingPerGram ? Number(making) * weight : Number(making || 0);
+      const goldValue = weight * purity * pricePerGram;
+      const makingTotal = goldValue * (Number(makingPercent)/100);
       const subtotal = goldValue + makingTotal;
       const profit = subtotal * (Number(profitPercent)/100);
       const beforeTax = subtotal + profit;
@@ -267,51 +204,40 @@
       return { goldValue, makingTotal, subtotal, profit, beforeTax, vat, total };
     }
 
-    // ---------- UI handlers ----------
-    $('calcPrice').addEventListener('click', ()=>{
-      const data = readForm();
-      const res = compute(data);
-      showBreakdown(res, data);
-    });
-
     function readForm(){
       return {
         weight: $('weight').value || 0,
         karat: $('karat').value,
         pricePerGram: $('pricePerGram').value || 0,
-        making: $('makingCharge').value || 0,
-        makingPerGram: $('makingPerGram').checked,
+        makingPercent: $('makingPercent').value || 0,
         profitPercent: $('profitPercent').value || 0,
         vatPercent: $('vatPercent').value || 0
       };
     }
 
-    function showBreakdown(res, form){
+    $('calcPrice').addEventListener('click', ()=>{
+      const data = readForm();
+      const res = compute(data);
       $('resultCard').classList.remove('hidden');
       $('breakdown').innerHTML = `
-        <div class="grid grid-cols-2 gap-2">
-          <div>ارزش طلای خالص:</div><div>${currency(res.goldValue)} تومان</div>
-          <div>اجرت ${form.makingPerGram? 'به ازای هر گرم' : '(کل)'}:</div><div>${currency(res.makingTotal)} تومان</div>
-          <div>جمع (تا قبل سود):</div><div>${currency(res.subtotal)} تومان</div>
-          <div>سود (${form.profitPercent}%):</div><div>${currency(res.profit)} تومان</div>
-          <div>مالیات (${form.vatPercent}%):</div><div>${currency(res.vat)} تومان</div>
-          <div class="font-bold">قیمت نهایی:</div><div class="font-bold text-lg">${currency(res.total)} تومان</div>
-        </div>
+        <div>ارزش طلای خالص: ${currency(res.goldValue)} تومان</div>
+        <div>اجرت (${data.makingPercent}%): ${currency(res.makingTotal)} تومان</div>
+        <div>جمع قبل سود: ${currency(res.subtotal)} تومان</div>
+        <div>سود (${data.profitPercent}%): ${currency(res.profit)} تومان</div>
+        <div>مالیات (${data.vatPercent}%): ${currency(res.vat)} تومان</div>
+        <div class="font-bold text-lg">قیمت نهایی: ${currency(res.total)} تومان</div>
       `;
-    }
+    });
 
-    // ---------- Save sale (transaction) ----------
     $('saveSale').addEventListener('click', ()=>{
       const form = readForm();
       const res = compute(form);
       const sale = {
         id: Date.now(),
-        date: $('saleDate').value || new Date().toISOString().slice(0,10),
+        date: $('saleDate').value || new Date().toISOString(),
         customer: $('customerName').value || 'عمومی',
         weight: Number(form.weight),
         karat: form.karat,
-        makingPerGram: form.makingPerGram,
-        makingValue: res.makingTotal,
         subtotal: res.subtotal,
         profit: res.profit,
         vat: res.vat,
@@ -325,42 +251,6 @@
       alert('فروش ثبت شد ✅');
     });
 
-    // ---------- Inventory ----------
-    $('addInventoryItem').addEventListener('click', ()=>{
-      const item = {
-        id: Date.now(),
-        name: $('invName').value || 'بدون نام',
-        weight: Number($('invWeight').value) || 0,
-        karat: Number($('invKarat').value) || 18,
-        qty: Number($('invQty').value) || 1
-      };
-      inv.push(item);
-      localStorage.setItem(ls.inv, JSON.stringify(inv));
-      renderInventory();
-      $('invName').value='';$('invQty').value=1;$('invWeight').value='';
-    });
-
-    function renderInventory(){
-      $('inventoryTable').innerHTML='';
-      inv.forEach(it=>{
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${it.name}</td><td>${it.weight}</td><td>${it.karat}</td><td>${it.qty}</td><td><button data-id="${it.id}" class="delInv px-2 py-1 bg-red-600 rounded-sm">حذف</button></td>`;
-        $('inventoryTable').appendChild(tr);
-      });
-      document.querySelectorAll('.delInv').forEach(btn=>btn.addEventListener('click', e=>{
-        const id = Number(e.target.dataset.id);
-        inv = inv.filter(x=>x.id!==id);
-        localStorage.setItem(ls.inv, JSON.stringify(inv));
-        renderInventory();
-      }));
-      $('inventoryCount').innerText = inv.reduce((s,i)=>s+i.qty,0);
-    }
-
-    // Inventory modal open/close
-    $('openInventory').addEventListener('click', ()=>{ $('inventoryModal').classList.remove('hidden'); renderInventory(); });
-    $('closeInventory').addEventListener('click', ()=>{ $('inventoryModal').classList.add('hidden'); });
-
-    // ---------- Transactions modal ----------
     $('openTxns').addEventListener('click', ()=>{ $('txnsModal').classList.remove('hidden'); renderTxns(); });
     $('closeTxns').addEventListener('click', ()=>{ $('txnsModal').classList.add('hidden'); });
 
@@ -368,99 +258,137 @@
       $('txnsTable').innerHTML='';
       txns.slice().reverse().forEach(t=>{
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${t.date}</td><td>${t.customer}</td><td>${t.weight}</td><td>${t.karat}</td><td>${currency(t.total)}</td><td><button data-id="${t.id}" class="delTxn px-2 py-1 bg-red-600 rounded-sm">حذف</button></td>`;
+        tr.innerHTML = `<td>${t.date}</td>
+                        <td>${t.customer}</td>
+                        <td>${t.weight}</td>
+                        <td>${t.karat}</td>
+                        <td>${currency(t.subtotal)}</td>
+                        <td>${currency(t.profit)}</td>
+                        <td>${currency(t.vat)}</td>
+                        <td>${currency(t.total)}</td>`;
         $('txnsTable').appendChild(tr);
       });
-      document.querySelectorAll('.delTxn').forEach(btn=>btn.addEventListener('click', e=>{
-        const id = Number(e.target.dataset.id);
-        txns = txns.filter(x=>x.id!==id);
-        localStorage.setItem(ls.txns, JSON.stringify(txns));
-        renderTxns(); updateUI();
-      }));
       $('txnCount').innerText = txns.length;
     }
 
-    // ---------- Invoice preview ----------
-    $('previewInvoice').addEventListener('click', ()=>{
-      const form = readForm();
-      const res = compute(form);
-      const meta = `مشتری: ${$('customerName').value || 'عمومی'} • تاریخ: ${$('saleDate').value}`;
-      $('invMeta').innerText = meta;
-      $('invTotal').innerText = currency(res.total);
-      $('invBody').innerHTML = `
-        <div>وزن: ${form.weight} گرم</div>
-        <div>عیار: ${form.karat}</div>
-        <div>ارزش طلای خالص: ${currency(res.goldValue)} تومان</div>
-        <div>اجرت: ${currency(res.makingTotal)} تومان</div>
-        <div>سود: ${currency(res.profit)} تومان</div>
-        <div>مالیات: ${currency(res.vat)} تومان</div>
-        <div class="mt-2 font-bold">مبلغ قابل پرداخت: ${currency(res.total)} تومان</div>
-      `;
-      $('invoiceModal').classList.remove('hidden');
-    });
-    $('closeInvoice').addEventListener('click', ()=>$('invoiceModal').classList.add('hidden'));
-    $('printInvoice').addEventListener('click', ()=>{ window.print(); });
-
-    // ---------- Export CSV ----------
     function download(filename, content){
       const a = document.createElement('a');
       a.href = URL.createObjectURL(new Blob([content],{type:'text/csv;charset=utf-8;'}));
-      a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+      a.download = filename; a.click();
     }
+
     $('exportCsv').addEventListener('click', ()=>{
-      if(!txns.length){ alert('تراکنشی برای خروجی وجود ندارد'); return; }
-      const rows = [ ['id','date','customer','weight','karat','making','subtotal','profit','vat','total','note'] ];
-      txns.forEach(t=> rows.push([t.id,t.date,t.customer,t.weight,t.karat,t.makingValue,t.subtotal,t.profit,t.vat,t.total,t.note]));
-      const csv = rows.map(r=> r.map(c=> '"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
-      download('goldpos_txns_'+new Date().toISOString().slice(0,10)+'.csv', csv);
+      if(!txns.length){ alert('هیچ تراکنشی وجود ندارد'); return; }
+      const rows = [['id','date','customer','weight','karat','subtotal','profit','vat','total','note']];
+      txns.forEach(t=> rows.push([t.id,t.date,t.customer,t.weight,t.karat,t.subtotal,t.profit,t.vat,t.total,t.note]));
+      const csv = rows.map(r=> r.join(',')).join('\n');
+      download('txns.csv', csv);
     });
 
-    // ---------- Chart ----------
+    $('importCsv').addEventListener('change', e=>{
+      const file = e.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = ev=>{
+        const lines = ev.target.result.split('\n').slice(1);
+        lines.forEach(l=>{
+          const c = l.split(',');
+          if(c.length >= 9){
+            txns.push({
+              id: c[0], date: c[1], customer: c[2],
+              weight: Number(c[3]), karat: c[4],
+              subtotal: Number(c[5]), profit: Number(c[6]),
+              vat: Number(c[7]), total: Number(c[8]), note: c[9]||''
+            });
+          }
+        });
+        localStorage.setItem(ls.txns, JSON.stringify(txns));
+        updateUI();
+        alert('CSV وارد شد ✅');
+      };
+      reader.readAsText(file);
+    });
+
     let salesChart = null;
     function renderChart(){
       const ctx = $('salesChart').getContext('2d');
       const grouped = {};
-      txns.forEach(t=>{ grouped[t.date] = (grouped[t.date]||0) + Number(t.total); });
+      txns.forEach(t=>{ grouped[t.date.slice(0,10)] = (grouped[t.date.slice(0,10)]||0) + Number(t.total); });
       const labels = Object.keys(grouped).slice(-12);
       const data = labels.map(l=> grouped[l]);
       if(salesChart) salesChart.destroy();
-      salesChart = new Chart(ctx,{
-        type:'line', data:{ labels, datasets:[{ label:'فروش (تومان)', data }]}, options:{ responsive:true, maintainAspectRatio:false }
-      });
+      salesChart = new Chart(ctx,{ type:'line', data:{ labels, datasets:[{ label:'فروش (تومان)', data }] } });
     }
 
-    // ---------- Theme and reset ----------
-    $('toggleTheme').addEventListener('click', ()=>{ document.body.classList.toggle('bg-gradient-to-b'); document.body.classList.toggle('bg-neutral-50'); document.body.classList.toggle('text-slate-900'); });
-    $('resetData').addEventListener('click', ()=>{ if(confirm('همهٔ داده‌ها پاک شوند؟')){ localStorage.removeItem(ls.txns); localStorage.removeItem(ls.inv); localStorage.removeItem(ls.price); txns=[]; inv=[]; updateUI(); renderInventory(); alert('پاک شد'); } });
+    $('toggleTheme').addEventListener('click', ()=>{ document.body.classList.toggle('bg-neutral-50'); document.body.classList.toggle('text-slate-900'); });
+    $('resetData').addEventListener('click', ()=>{ if(confirm('پاک شود؟')){ localStorage.clear(); txns=[]; updateUI(); } });
 
-    // ---------- Modal pointer-events blocker ----------
-    document.querySelectorAll('#modals > div').forEach(m=> m.addEventListener('click', e=> e.stopPropagation()));
-
-    // ---------- Initialize UI ----------
     function updateUI(){
       $('txnCount').innerText = txns.length;
-      $('inventoryCount').innerText = inv.reduce((s,i)=>s+i.qty,0);
       const totalSales = txns.reduce((s,t)=>s+(Number(t.total)||0),0);
-      $('summaryNet').innerText = currency(totalSales) + ' تومان';
+      $('summaryNet').innerText = currency(totalSales)+' تومان';
       renderChart();
     }
     updateUI();
-
-    // ---------- On load, attach other buttons ----------
-    $('addToInventory').addEventListener('click', ()=>{
-      const name = $('note').value || 'اضافه از فروش';
-      const weight = Number($('weight').value) || 0;
-      const karat = Number($('karat').value) || 18;
-      inv.push({ id: Date.now(), name, weight, karat, qty:1 });
-      localStorage.setItem(ls.inv, JSON.stringify(inv)); renderInventory(); alert('به انبار اضافه شد');
-    });
-
-    // small UX: set today's date
-    (function setToday(){ const d = new Date(); $('saleDate').value = d.toISOString().slice(0,10); })();
-
-    // prevent accidental form submits
-    window.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); } });
+    $('previewInvoice').addEventListener('click', ()=>{
+  const form = readForm();          
+  const res = compute(form);         
+  
+  const customer = $('customerName').value || 'عمومی';
+  const gender = $('gender') ? $('gender').value : ''; // خانم/آقا
+  const nationalId = $('nationalId') ? $('nationalId').value : '';
+  const date = $('saleDate').value ? new Date($('saleDate').value).toLocaleString() : new Date().toLocaleString();
+  const note = $('note').value || '';
+  const pricePerGram = form.pricePerGram || 0;
+  const purity = purityFactor(form.karat);
+  
+  $('invoiceContent').innerHTML = `
+    <h2 class="text-2xl font-bold mb-4 text-center">فاکتور فروش طلا</h2>
+    
+    <div class="grid grid-cols-2 gap-2 mb-2">
+      <div><strong>خریدار:</strong> ${customer} ${gender}</div>
+      <div><strong>کد ملی:</strong> ${nationalId}</div>
+      <div><strong>تاریخ:</strong> ${date.split(',')[0]}</div>
+      <div><strong>ساعت:</strong> ${date.split(',')[1]}</div>
+      <div class="col-span-2"><strong>توضیحات و شماره فاکتور:</strong> ${note}</div>
+      <div><strong>نرخ روز (تومان):</strong> ${currency(pricePerGram)}</div>
+      <div><strong>فی ابشده (تومان):</strong> ${currency(res.total)}</div>
+    </div>
+    
+    <hr class="my-2">
+    
+    <table class="w-full border border-slate-400 text-right small mb-2">
+      <thead class="bg-slate-200 text-black">
+        <tr>
+          <th class="border border-slate-400 px-2">نوع طلا</th>
+          <th class="border border-slate-400 px-2">عیار</th>
+          <th class="border border-slate-400 px-2">گرم</th>
+          <th class="border border-slate-400 px-2">اجرت</th>
+          <th class="border border-slate-400 px-2">مبلغ کل</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="border border-slate-400 px-2">.......</td>
+          <td class="border border-slate-400 px-2">${form.karat}</td>
+          <td class="border border-slate-400 px-2">${form.weight} گرم</td>
+          <td class="border border-slate-400 px-2">${currency(res.makingTotal)}</td>
+          <td class="border border-slate-400 px-2 font-bold">${currency(res.total)}</td>
+        </tr>
+      </tbody>
+    </table>
+    
+    <div class="text-right font-bold mt-2">
+      <div>مالیات بر ارزش افزوده (9٪): ${currency(res.vat)}</div>
+      <div class="text-lg mt-1">مبلغ نهایی: ${currency(res.total)} تومان</div>
+    </div>
+  `;
+  
+  $('invoice').classList.remove('hidden');  
+});
 
   </script>
+  <!-- بخش پیش‌فاکتور -->
+
 </body>
 </html>
