@@ -1,4 +1,5 @@
     const validCreds = {
-      'rsd': '1234',
-      'erfan': '2345'
+      '4Ba': '123456',
+      'GoldPOS': '2345'
+
     };
