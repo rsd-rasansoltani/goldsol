@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ورود </title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--accent:#06b6d4;--text:#e6eef6}
+    *{box-sizing:border-box}
+    body{font-family: Vazirmatn, Tahoma, Arial;min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#071226,#0b1a2a);color:var(--text);margin:0;padding:20px}
+    .card{background:var(--card);padding:28px;border-radius:12px;max-width:420px;width:100%;box-shadow:0 6px 24px rgba(2,6,23,.6)}
+    h1{font-size:18px;margin:0 0 12px;text-align:center}
+    label{display:block;margin-top:12px;font-size:13px}
+    input[type=text],input[type=password],input[type=number]{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,.06);background:transparent;color:var(--text);margin-top:6px}
+    .row{display:flex;gap:8px;margin-top:14px}
+    button{flex:1;padding:10px;border-radius:10px;border:0;background:var(--accent);color:#012;border-radius:8px;font-weight:600;cursor:pointer}
+    .muted{font-size:13px;color:rgba(230,238,246,.7);margin-top:10px}
+    .hidden{display:none}
+    .notice{margin-top:12px;padding:10px;border-radius:8px;background:rgba(255,255,255,.03);font-size:13px}
+    .error{color:#ffb4b4}
+    .success{color:#b5ffd6}
+  </style>
+</head>
+<body>
+  <div class="card" role="main">
+    <h1>ورود — تأیید "من ربات نیستم"</h1>
+    <form id="loginForm" autocomplete="off" onsubmit="return false;">
+      <label for="username">نام کاربری</label>
+      <input id="username" name="username" type="text" placeholder="نام " required />
+
+      <label for="password">رمز</label>
+      <input id="password" name="password" type="password" placeholder="رمز" required />
+
+      <div class="row">
+        <button id="notRobotBtn" type="button">ورود </button>
+      </div>
+
+      <div id="captchaSection" class="hidden">
+        <div class="notice">برای ادامه، لطفاً مسئلهٔ ریاضی زیر را حل کنید:</div>
+        <div style="margin-top:10px;display:flex;gap:8px;align-items:center">
+          <div id="captchaQuestion" style="font-weight:700;font-size:16px;min-width:120px"></div>
+          <input id="captchaAnswer" type="number" placeholder="جواب" />
+          <button id="verifyBtn" type="button">بررسی</button>
+        </div>
+        <div id="captchaMsg" class="muted" style="margin-top:8px"></div>
+      </div>
+
+      <div id="message" class="notice hidden" style="margin-top:14px"></div>
+    </form>
+  </div>
+ <script src="t.js"></script>
+  <script>
+    // ذخیرهٔ ترکیب‌های معتبر در جاوااسکریپت (تذکر: این روش فقط برای تمرین/آزمایش مناسب است)
+
+
+    const usernameEl = document.getElementById('username');
+    const passwordEl = document.getElementById('password');
+    const notRobotBtn = document.getElementById('notRobotBtn');
+    const captchaSection = document.getElementById('captchaSection');
+    const captchaQuestion = document.getElementById('captchaQuestion');
+    const captchaAnswer = document.getElementById('captchaAnswer');
+    const verifyBtn = document.getElementById('verifyBtn');
+    const message = document.getElementById('message');
+    const captchaMsg = document.getElementById('captchaMsg');
+
+    let expectedAnswer = null;
+    let credentialsOk = false;
+
+    function showMessage(text, type = ''){
+      message.classList.remove('hidden');
+      message.textContent = text;
+      message.className = 'notice' + (type ? ' ' + type : '');
+    }
+
+    function hideMessage(){
+      message.classList.add('hidden');
+      message.textContent = '';
+    }
+
+    function checkCredentials(){
+      const u = usernameEl.value.trim();
+      const p = passwordEl.value;
+      if(!u || !p) return false;
+      if(Object.prototype.hasOwnProperty.call(validCreds, u) && validCreds[u] === p) return true;
+      return false;
+    }
+
+    function makeCaptcha(){
+      // ساخت یک سوال سادهٔ ریاضی: a + b یا a - b یا a * b (اما نگه داشتن ساده)
+      const a = Math.floor(Math.random()*8) + 1; // 1..8
+      const b = Math.floor(Math.random()*8) + 1; // 1..8
+      const ops = ['+','-'];
+      const op = ops[Math.floor(Math.random()*ops.length)];
+      let q, ans;
+      if(op === '+'){ q = `${a} + ${b}`; ans = a + b; }
+      else { q = `${a + b} - ${b}`; ans = a; } // تضمین جواب مثبت ساده
+      expectedAnswer = ans;
+      captchaQuestion.textContent = q;
+      captchaAnswer.value = '';
+      captchaMsg.textContent = '';
+    }
+
+    notRobotBtn.addEventListener('click', function(){
+      hideMessage();
+      credentialsOk = checkCredentials();
+      if(!credentialsOk){
+        showMessage('نام کاربری یا رمز اشتباه است. لطفاً دوباره بررسی کنید.', 'error');
+        captchaSection.classList.add('hidden');
+        return;
+      }
+      // اگر درست بود، کپچا را نشان بده
+      makeCaptcha();
+      captchaSection.classList.remove('hidden');
+      captchaAnswer.focus();
+    });
+
+    verifyBtn.addEventListener('click', function(){
+      if(!credentialsOk){
+        showMessage('ابتدا نام کاربری و رمز را وارد کنید و روی "من ربات نیستم" بزنید.', 'error');
+        return;
+      }
+      const userAns = Number(captchaAnswer.value);
+      if(!captchaAnswer.value){
+        captchaMsg.textContent = 'لطفاً جواب را وارد کنید.';
+        return;
+      }
+      if(userAns === expectedAnswer){
+        captchaMsg.textContent = '';
+        showMessage('درست است — به صفحهٔ RSDEX هدایت می‌شوید...', 'success');
+        // تغییر مسیر به RSDEX.html
+        setTimeout(() => {
+          window.location.href = 'H.HTML';
+        }, 700);
+      } else {
+        captchaMsg.textContent = 'جواب اشتباه است. سوال جدید ساخته شد.';
+        makeCaptcha();
+      }
+    });
+
+    // اجازهٔ ارسال با Enter در فیلد کپچا
+    captchaAnswer.addEventListener('keydown', function(e){
+      if(e.key === 'Enter'){
+        verifyBtn.click();
+      }
+    });
+
+    // جلوگیری از ارسال فرم با Enter در فیلدهای عادی (تا کاربر حتماً روی دکمه بزند)
+    usernameEl.addEventListener('keydown', function(e){ if(e.key === 'Enter') e.preventDefault(); });
+    passwordEl.addEventListener('keydown', function(e){ if(e.key === 'Enter') e.preventDefault(); });
+
+  </script>
+</body>
+</html>
