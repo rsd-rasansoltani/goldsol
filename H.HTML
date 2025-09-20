@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>GoldPOS — طلافروشی سلطانی</title>
+  <!-- Tailwind via CDN for quick beautiful UI -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js for نمودارها -->
+
+  <style>
+    /* Small custom tweaks */
+    body { font-family: 'Vazirmatn', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }
+    .glass { background: rgba(255, 255, 255, 0.06); backdrop-filter: blur(6px); }
+    .dir-rtl { direction: rtl; }
+    table td, table th { padding: 0.5rem; }
+    .small { font-size: 0.85rem; }
+    @media print {
+  body * {
+    visibility: hidden;
+  }
+  #invoice, #invoice * {
+    visibility: visible;
+  }
+  #invoice {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
+}
+
+  </style>
+</head>
+<body class="bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-slate-100 min-h-screen">
+  <div class="max-w-6xl mx-auto p-6">
+    <header class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-bold">GoldPOS — طلافروشی سلطانی</h1>
+        <p class="text-sm text-slate-300">ساخته شده با راسان دیزاین </p>
+      </div>
+      <div class="flex items-center gap-3">
+        <button id="toggleTheme" class="px-3 py-2 bg-slate-700 rounded-md small">تغییر تم</button>
+        <button id="resetData" class="px-3 py-2 bg-red-600 rounded-md small">پاک کردن همه داده‌ها</button>
+      </div>
+    </header>
+
+    <main class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- LEFT: Sale Form -->
+      <section class="lg:col-span-2 glass p-5 rounded-2xl">
+        <h2 class="text-xl font-semibold mb-3">فروش جدید</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block small mb-1">نام مشتری</label>
+            <input id="customerName" class="w-full p-2 rounded-md bg-slate-800" placeholder="مثال: راسان سلطانی">
+          </div>
+          <div>
+            <label class="block small mb-1">تاریخ</label>
+            <input id="saleDate" type="date" class="w-full p-2 rounded-md bg-slate-800">
+          </div>
+          <div>
+            <label class="block small mb-1">وزن (گرم)</label>
+            <input id="weight" type="number" step="0.001" class="w-full p-2 rounded-md bg-slate-800" placeholder="مثال: 3.45">
+          </div>
+          <div>
+            <label class="block small mb-1">عیار (عیار)</label>
+            <select id="karat" class="w-full p-2 rounded-md bg-slate-800">
+              <option value="24">24</option>
+              <option value="23">23</option>
+              <option value="22">22</option>
+              <option value="21">21</option>
+              <option value="18" selected>18</option>
+              <option value="14">14</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block small mb-1">قیمت روز هر گرم (تومان)</label>
+            <input id="pricePerGram" type="number" class="w-full p-2 rounded-md bg-slate-800" placeholder="0">
+          </div>
+          <div>
+            <label class="block small mb-1">اجرت ساخت (تومان) — کل یا هر گرم</label>
+            <input id="makingCharge" type="number" class="w-full p-2 rounded-md bg-slate-800" placeholder="مثال: 20000">
+            <label class="small text-slate-400"><input id="makingPerGram" type="checkbox" class="ml-2"> محاسبه به ازای هر گرم</label>
+          </div>
+
+          <div>
+            <label class="block small mb-1">درصد سود فروشنده (%)</label>
+            <input id="profitPercent" type="number" value="5" class="w-full p-2 rounded-md bg-slate-800">
+          </div>
+          <div>
+            <label class="block small mb-1">مالیات (٪)</label>
+            <input id="vatPercent" type="number" value="9" class="w-full p-2 rounded-md bg-slate-800">
+          </div>
+
+          <div class="md:col-span-2">
+            <label class="block small mb-1">توضیحات / شماره فاکتور</label>
+            <input id="note" class="w-full p-2 rounded-md bg-slate-800" placeholder="مثال: فروش عادی - فاکتور 123">
+          </div>
+        </div>
+
+        <div class="mt-4 flex gap-3">
+          <button id="calcPrice" class="px-4 py-2 bg-emerald-500 rounded-md font-semibold">محاسبه قیمت</button>
+          <button id="saveSale" class="px-4 py-2 bg-indigo-600 rounded-md font-semibold">ثبت فروش</button>
+          <button id="previewInvoice" class="px-4 py-2 bg-sky-500 rounded-md font-semibold">پیش‌نمایش فاکتور</button>
+          <button id="addToInventory" class="px-4 py-2 bg-yellow-600 rounded-md font-semibold">اضافه به انبار</button>
+        </div>
+
+        <div id="resultCard" class="mt-5 p-4 bg-slate-900 rounded-lg border border-slate-700 hidden">
+          <h3 class="font-semibold">جزئیات قیمت</h3>
+          <div id="breakdown" class="mt-2 small text-slate-300"></div>
+        </div>
+      </section>
+
+      <!-- RIGHT: Settings / Inventory / Reports -->
+      <aside class="glass p-5 rounded-2xl">
+        <h2 class="text-lg font-semibold mb-3">ابزارها و گزارش</h2>
+
+        <div class="space-y-3">
+          <div class="bg-slate-800 p-3 rounded-md">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-sm text-slate-300">موجودی کل (قطعات)</div>
+                <div id="inventoryCount" class="text-xl font-bold">0</div>
+              </div>
+              <div class="text-right">
+                <button id="openInventory" class="px-3 py-1 bg-slate-700 rounded-md small">مدیریت انبار</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-slate-800 p-3 rounded-md">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-sm text-slate-300">تراکنش‌ها</div>
+                <div id="txnCount" class="text-xl font-bold">0</div>
+              </div>
+              <div>
+                <button id="openTxns" class="px-3 py-1 bg-slate-700 rounded-md small">مشاهده</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-slate-800 p-3 rounded-md">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-sm text-slate-300">خلاصه فروش</div>
+                <div id="summaryNet" class="text-xl font-bold">0 تومان</div>
+              </div>
+              <div>
+                <button id="exportCsv" class="px-3 py-1 bg-slate-700 rounded-md small">خروجی CSV</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <hr class="my-4 border-slate-700">
+        <canvas id="salesChart" height="180"></canvas>
+      </aside>
+    </main>
+
+
+    <!-- Modals: Inventory, Transactions, Invoice -->
+    <div id="modals" class="fixed inset-0 flex items-center justify-center p-4 pointer-events-none">
+      <!-- Inventory Modal -->
+      <div id="inventoryModal" class="max-w-3xl w-full pointer-events-auto hidden">
+        <div class="bg-slate-900 rounded-xl p-5">
+          <div class="flex justify-between items-center mb-3">
+            <h3 class="text-lg font-semibold">مدیریت انبار</h3>
+            <div class="flex gap-2">
+              <button id="closeInventory" class="px-3 py-1 bg-slate-700 rounded-md">بستن</button>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <input id="invName" placeholder="نام کالا یا قطعه" class="p-2 rounded-md bg-slate-800">
+            <input id="invWeight" placeholder="وزن (g)" class="p-2 rounded-md bg-slate-800" type="number" step="0.001">
+            <input id="invKarat" placeholder="عیار" class="p-2 rounded-md bg-slate-800" type="number" value="18">
+            <input id="invQty" placeholder="تعداد" class="p-2 rounded-md bg-slate-800" type="number" value="1">
+            <button id="addInventoryItem" class="col-span-3 px-4 py-2 bg-emerald-600 rounded-md">افزودن به انبار</button>
+          </div>
+          <div class="mt-4 overflow-auto max-h-60">
+            <table class="w-full small text-left">
+              <thead class="text-slate-300 text-sm">
+                <tr><th>نام</th><th>وزن</th><th>عیار</th><th>تعداد</th><th></th></tr>
+              </thead>
+              <tbody id="inventoryTable" class="text-slate-200"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Transactions Modal -->
+      <div id="txnsModal" class="max-w-4xl w-full pointer-events-auto hidden">
+        <div class="bg-slate-900 rounded-xl p-5">
+          <div class="flex justify-between items-center mb-3">
+            <h3 class="text-lg font-semibold">لیست تراکنش‌ها</h3>
+            <div class="flex gap-2">
+              <button id="closeTxns" class="px-3 py-1 bg-slate-700 rounded-md">بستن</button>
+            </div>
+          </div>
+          <div class="overflow-auto max-h-72">
+            <table class="w-full small text-right text-slate-200">
+              <thead class="text-slate-300 text-sm">
+                <tr><th>تاریخ</th><th>مشتری</th><th>وزن</th><th>عیار</th><th>مبلغ نهایی</th><th></th></tr>
+              </thead>
+              <tbody id="txnsTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Invoice Modal -->
+      <div id="invoiceModal" class="max-w-2xl w-full pointer-events-auto hidden">
+        <div class="bg-white rounded-xl p-5 text-slate-900 dir-rtl" id="invoiceContent">
+          <div class="flex justify-between items-center mb-4">
+            <div>
+              <h3 class="text-xl font-semibold">فاکتور — طلافروشی سلطانی</h3>
+              <div id="invMeta" class="text-sm text-slate-600"></div>
+            </div>
+            <div class="text-right">
+              <div id="invTotal" class="text-lg font-bold"></div>
+              <div class="small text-slate-500">تومان</div>
+            </div>
+          </div>
+          <div id="invBody" class="small text-slate-700"></div>
+          <div class="mt-4 flex gap-2 justify-end">
+            <button id="printInvoice" class="px-3 py-1 bg-slate-800 text-white rounded-md">پرینت</button>
+            <button id="closeInvoice" class="px-3 py-1 bg-slate-700 rounded-md">بستن</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="mt-8 text-center text-slate-400 small"> نسخهٔ وب — توسط راسان دیزاین طراحی شده برای "طلافروشی سلطانی" • ذخیره محلی</footer>
+  </div>
+
+  <script>
+    // ---------- Utilities ----------
+    const $ = id => document.getElementById(id);
+    const ls = { txns: 'gs_txns', inv: 'gs_inv', price: 'gs_price' };
+
+    function currency(n){ return Number(n).toLocaleString('fa-IR'); }
+
+    // ---------- State ----------
+    let txns = JSON.parse(localStorage.getItem(ls.txns) || '[]');
+    let inv = JSON.parse(localStorage.getItem(ls.inv) || '[]');
+
+    // Init UI values
+    $('pricePerGram').value = localStorage.getItem(ls.price) || $('pricePerGram').value;
+    $('saleDate').valueAsDate = new Date();
+
+    // ---------- Price calculation ----------
+    function purityFactor(karat){ return Number(karat)/24; }
+
+    function compute({weight, karat, pricePerGram, making, makingPerGram, profitPercent, vatPercent}){
+      weight = Number(weight);
+      pricePerGram = Number(pricePerGram);
+      const purity = purityFactor(karat);
+      const goldValue = weight * purity * pricePerGram; // ارزش طلای خالص
+      const makingTotal = makingPerGram ? Number(making) * weight : Number(making || 0);
+      const subtotal = goldValue + makingTotal;
+      const profit = subtotal * (Number(profitPercent)/100);
+      const beforeTax = subtotal + profit;
+      const vat = beforeTax * (Number(vatPercent)/100);
+      const total = Math.round(beforeTax + vat);
+      return { goldValue, makingTotal, subtotal, profit, beforeTax, vat, total };
+    }
+
+    // ---------- UI handlers ----------
+    $('calcPrice').addEventListener('click', ()=>{
+      const data = readForm();
+      const res = compute(data);
+      showBreakdown(res, data);
+    });
+
+    function readForm(){
+      return {
+        weight: $('weight').value || 0,
+        karat: $('karat').value,
+        pricePerGram: $('pricePerGram').value || 0,
+        making: $('makingCharge').value || 0,
+        makingPerGram: $('makingPerGram').checked,
+        profitPercent: $('profitPercent').value || 0,
+        vatPercent: $('vatPercent').value || 0
+      };
+    }
+
+    function showBreakdown(res, form){
+      $('resultCard').classList.remove('hidden');
+      $('breakdown').innerHTML = `
+        <div class="grid grid-cols-2 gap-2">
+          <div>ارزش طلای خالص:</div><div>${currency(res.goldValue)} تومان</div>
+          <div>اجرت ${form.makingPerGram? 'به ازای هر گرم' : '(کل)'}:</div><div>${currency(res.makingTotal)} تومان</div>
+          <div>جمع (تا قبل سود):</div><div>${currency(res.subtotal)} تومان</div>
+          <div>سود (${form.profitPercent}%):</div><div>${currency(res.profit)} تومان</div>
+          <div>مالیات (${form.vatPercent}%):</div><div>${currency(res.vat)} تومان</div>
+          <div class="font-bold">قیمت نهایی:</div><div class="font-bold text-lg">${currency(res.total)} تومان</div>
+        </div>
+      `;
+    }
+
+    // ---------- Save sale (transaction) ----------
+    $('saveSale').addEventListener('click', ()=>{
+      const form = readForm();
+      const res = compute(form);
+      const sale = {
+        id: Date.now(),
+        date: $('saleDate').value || new Date().toISOString().slice(0,10),
+        customer: $('customerName').value || 'عمومی',
+        weight: Number(form.weight),
+        karat: form.karat,
+        makingPerGram: form.makingPerGram,
+        makingValue: res.makingTotal,
+        subtotal: res.subtotal,
+        profit: res.profit,
+        vat: res.vat,
+        total: res.total,
+        note: $('note').value || ''
+      };
+      txns.push(sale);
+      localStorage.setItem(ls.txns, JSON.stringify(txns));
+      localStorage.setItem(ls.price, $('pricePerGram').value);
+      updateUI();
+      alert('فروش ثبت شد ✅');
+    });
+
+    // ---------- Inventory ----------
+    $('addInventoryItem').addEventListener('click', ()=>{
+      const item = {
+        id: Date.now(),
+        name: $('invName').value || 'بدون نام',
+        weight: Number($('invWeight').value) || 0,
+        karat: Number($('invKarat').value) || 18,
+        qty: Number($('invQty').value) || 1
+      };
+      inv.push(item);
+      localStorage.setItem(ls.inv, JSON.stringify(inv));
+      renderInventory();
+      $('invName').value='';$('invQty').value=1;$('invWeight').value='';
+    });
+
+    function renderInventory(){
+      $('inventoryTable').innerHTML='';
+      inv.forEach(it=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${it.name}</td><td>${it.weight}</td><td>${it.karat}</td><td>${it.qty}</td><td><button data-id="${it.id}" class="delInv px-2 py-1 bg-red-600 rounded-sm">حذف</button></td>`;
+        $('inventoryTable').appendChild(tr);
+      });
+      document.querySelectorAll('.delInv').forEach(btn=>btn.addEventListener('click', e=>{
+        const id = Number(e.target.dataset.id);
+        inv = inv.filter(x=>x.id!==id);
+        localStorage.setItem(ls.inv, JSON.stringify(inv));
+        renderInventory();
+      }));
+      $('inventoryCount').innerText = inv.reduce((s,i)=>s+i.qty,0);
+    }
+
+    // Inventory modal open/close
+    $('openInventory').addEventListener('click', ()=>{ $('inventoryModal').classList.remove('hidden'); renderInventory(); });
+    $('closeInventory').addEventListener('click', ()=>{ $('inventoryModal').classList.add('hidden'); });
+
+    // ---------- Transactions modal ----------
+    $('openTxns').addEventListener('click', ()=>{ $('txnsModal').classList.remove('hidden'); renderTxns(); });
+    $('closeTxns').addEventListener('click', ()=>{ $('txnsModal').classList.add('hidden'); });
+
+    function renderTxns(){
+      $('txnsTable').innerHTML='';
+      txns.slice().reverse().forEach(t=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${t.date}</td><td>${t.customer}</td><td>${t.weight}</td><td>${t.karat}</td><td>${currency(t.total)}</td><td><button data-id="${t.id}" class="delTxn px-2 py-1 bg-red-600 rounded-sm">حذف</button></td>`;
+        $('txnsTable').appendChild(tr);
+      });
+      document.querySelectorAll('.delTxn').forEach(btn=>btn.addEventListener('click', e=>{
+        const id = Number(e.target.dataset.id);
+        txns = txns.filter(x=>x.id!==id);
+        localStorage.setItem(ls.txns, JSON.stringify(txns));
+        renderTxns(); updateUI();
+      }));
+      $('txnCount').innerText = txns.length;
+    }
+
+    // ---------- Invoice preview ----------
+    $('previewInvoice').addEventListener('click', ()=>{
+      const form = readForm();
+      const res = compute(form);
+      const meta = `مشتری: ${$('customerName').value || 'عمومی'} • تاریخ: ${$('saleDate').value}`;
+      $('invMeta').innerText = meta;
+      $('invTotal').innerText = currency(res.total);
+      $('invBody').innerHTML = `
+        <div>وزن: ${form.weight} گرم</div>
+        <div>عیار: ${form.karat}</div>
+        <div>ارزش طلای خالص: ${currency(res.goldValue)} تومان</div>
+        <div>اجرت: ${currency(res.makingTotal)} تومان</div>
+        <div>سود: ${currency(res.profit)} تومان</div>
+        <div>مالیات: ${currency(res.vat)} تومان</div>
+        <div class="mt-2 font-bold">مبلغ قابل پرداخت: ${currency(res.total)} تومان</div>
+      `;
+      $('invoiceModal').classList.remove('hidden');
+    });
+    $('closeInvoice').addEventListener('click', ()=>$('invoiceModal').classList.add('hidden'));
+    $('printInvoice').addEventListener('click', ()=>{ window.print(); });
+
+    // ---------- Export CSV ----------
+    function download(filename, content){
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([content],{type:'text/csv;charset=utf-8;'}));
+      a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+    }
+    $('exportCsv').addEventListener('click', ()=>{
+      if(!txns.length){ alert('تراکنشی برای خروجی وجود ندارد'); return; }
+      const rows = [ ['id','date','customer','weight','karat','making','subtotal','profit','vat','total','note'] ];
+      txns.forEach(t=> rows.push([t.id,t.date,t.customer,t.weight,t.karat,t.makingValue,t.subtotal,t.profit,t.vat,t.total,t.note]));
+      const csv = rows.map(r=> r.map(c=> '"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
+      download('goldpos_txns_'+new Date().toISOString().slice(0,10)+'.csv', csv);
+    });
+
+    // ---------- Chart ----------
+    let salesChart = null;
+    function renderChart(){
+      const ctx = $('salesChart').getContext('2d');
+      const grouped = {};
+      txns.forEach(t=>{ grouped[t.date] = (grouped[t.date]||0) + Number(t.total); });
+      const labels = Object.keys(grouped).slice(-12);
+      const data = labels.map(l=> grouped[l]);
+      if(salesChart) salesChart.destroy();
+      salesChart = new Chart(ctx,{
+        type:'line', data:{ labels, datasets:[{ label:'فروش (تومان)', data }]}, options:{ responsive:true, maintainAspectRatio:false }
+      });
+    }
+
+    // ---------- Theme and reset ----------
+    $('toggleTheme').addEventListener('click', ()=>{ document.body.classList.toggle('bg-gradient-to-b'); document.body.classList.toggle('bg-neutral-50'); document.body.classList.toggle('text-slate-900'); });
+    $('resetData').addEventListener('click', ()=>{ if(confirm('همهٔ داده‌ها پاک شوند؟')){ localStorage.removeItem(ls.txns); localStorage.removeItem(ls.inv); localStorage.removeItem(ls.price); txns=[]; inv=[]; updateUI(); renderInventory(); alert('پاک شد'); } });
+
+    // ---------- Modal pointer-events blocker ----------
+    document.querySelectorAll('#modals > div').forEach(m=> m.addEventListener('click', e=> e.stopPropagation()));
+
+    // ---------- Initialize UI ----------
+    function updateUI(){
+      $('txnCount').innerText = txns.length;
+      $('inventoryCount').innerText = inv.reduce((s,i)=>s+i.qty,0);
+      const totalSales = txns.reduce((s,t)=>s+(Number(t.total)||0),0);
+      $('summaryNet').innerText = currency(totalSales) + ' تومان';
+      renderChart();
+    }
+    updateUI();
+
+    // ---------- On load, attach other buttons ----------
+    $('addToInventory').addEventListener('click', ()=>{
+      const name = $('note').value || 'اضافه از فروش';
+      const weight = Number($('weight').value) || 0;
+      const karat = Number($('karat').value) || 18;
+      inv.push({ id: Date.now(), name, weight, karat, qty:1 });
+      localStorage.setItem(ls.inv, JSON.stringify(inv)); renderInventory(); alert('به انبار اضافه شد');
+    });
+
+    // small UX: set today's date
+    (function setToday(){ const d = new Date(); $('saleDate').value = d.toISOString().slice(0,10); })();
+
+    // prevent accidental form submits
+    window.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); } });
+
+  </script>
+</body>
+</html>
