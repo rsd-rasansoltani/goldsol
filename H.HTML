@@ -73,7 +73,7 @@
             </select>
           </div>
           <div>
-            <label class="block small mb-1">قیمت روز هر گرم (تومان)</label>
+            <label class="block small mb-1">قیمت  گرم طلای ۲۴ عیار(تومان)</label>
             <input id="pricePerGram" type="number" class="w-full p-2 rounded-md bg-slate-800" placeholder="0">
           </div>
           <div>
@@ -236,7 +236,7 @@ $('calcPrice').addEventListener('click', ()=>{
         <div>جمع قبل سود: ${currency(res.subtotal)} تومان</div>
         <div>سود (${data.profitPercent}%): ${currency(res.profit)} تومان (${res.profitGram} گرم)</div>
         <div>مالیات (${data.vatPercent}%): ${currency(res.vat)} تومان (${res.vatGram} گرم)</div>
-        <div class="font-bold text-lg">قیمت نهایی: ${currency(res.total)} تومان (${res.totalGram} گرم)</div>
+        <div class="font-bold text-lg">فی فروش: ${currency(res.total)} تومان (${res.totalGram} گرم)</div>
     `;
 });
 
