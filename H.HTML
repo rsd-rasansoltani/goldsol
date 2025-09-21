@@ -231,7 +231,7 @@ $('calcPrice').addEventListener('click', ()=>{
     const res = compute(data);
     $('resultCard').classList.remove('hidden');
     $('breakdown').innerHTML = `
-        <div>ارزش طلای خالص: ${currency(res.goldValue)} تومان (${res.goldValueGram} گرم)</div>
+        <div>فی آبشده: ${currency(res.goldValue)} تومان (${res.goldValueGram} گرم)</div>
         <div>اجرت (${data.makingPercent}%): ${currency(res.makingTotal)} تومان (${res.makingTotalGram} گرم)</div>
         <div>جمع قبل سود: ${currency(res.subtotal)} تومان</div>
         <div>سود (${data.profitPercent}%): ${currency(res.profit)} تومان (${res.profitGram} گرم)</div>
