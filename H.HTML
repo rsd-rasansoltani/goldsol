@@ -181,58 +181,70 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script>
-    const $ = id => document.getElementById(id);
-    const ls = { txns: 'gs_txns', price: 'gs_price' };
-    function currency(n){ return Number(n).toLocaleString('fa-IR'); }
+<script>
+const $ = id => document.getElementById(id);
+const ls = { txns: 'gs_txns', price: 'gs_price' };
+function currency(n){ return Number(n).toLocaleString('fa-IR'); }
 
-    let txns = JSON.parse(localStorage.getItem(ls.txns) || '[]');
-    $('pricePerGram').value = localStorage.getItem(ls.price) || 0;
+let txns = JSON.parse(localStorage.getItem(ls.txns) || '[]');
+$('pricePerGram').value = localStorage.getItem(ls.price) || 0;
 
-    function purityFactor(karat){ return Number(karat)/24; }
-    function compute({weight, karat, pricePerGram, makingPercent, profitPercent, vatPercent}){
-      weight = Number(weight);
-      pricePerGram = Number(pricePerGram);
-      const purity = purityFactor(karat);
-      const goldValue = weight * purity * pricePerGram;
-      const makingTotal = goldValue * (Number(makingPercent)/100);
-      const subtotal = goldValue + makingTotal;
-      const profit = subtotal * (Number(profitPercent)/100);
-      const beforeTax = subtotal + profit;
-      const vat = beforeTax * (Number(vatPercent)/100);
-      const total = Math.round(beforeTax + vat);
-      return { goldValue, makingTotal, subtotal, profit, beforeTax, vat, total };
-    }
+function purityFactor(karat){ return Number(karat)/24; }
 
-    function readForm(){
-      return {
+function compute({weight, karat, pricePerGram, makingPercent, profitPercent, vatPercent}){
+    weight = Number(weight);
+    pricePerGram = Number(pricePerGram);
+    const purity = purityFactor(karat);
+    const goldValue = weight * purity * pricePerGram;
+    const makingTotal = goldValue * (Number(makingPercent)/100);
+    const subtotal = goldValue + makingTotal;
+    const profit = subtotal * (Number(profitPercent)/100);
+    const beforeTax = subtotal + profit;
+    const vat = beforeTax * (Number(vatPercent)/100);
+    const total = Math.round(beforeTax + vat);
+
+    // معادل گرم هر بخش
+    const goldValueGram = (goldValue / pricePerGram).toFixed(3);
+    const makingTotalGram = (makingTotal / pricePerGram).toFixed(3);
+    const profitGram = (profit / pricePerGram).toFixed(3);
+    const vatGram = (vat / pricePerGram).toFixed(3);
+    const totalGram = (total / pricePerGram).toFixed(3);
+
+    return { goldValue, makingTotal, subtotal, profit, beforeTax, vat, total, 
+             goldValueGram, makingTotalGram, profitGram, vatGram, totalGram };
+}
+
+function readForm(){
+    return {
         weight: $('weight').value || 0,
         karat: $('karat').value,
         pricePerGram: $('pricePerGram').value || 0,
         makingPercent: $('makingPercent').value || 0,
         profitPercent: $('profitPercent').value || 0,
         vatPercent: $('vatPercent').value || 0
-      };
-    }
+    };
+}
 
-    $('calcPrice').addEventListener('click', ()=>{
-      const data = readForm();
-      const res = compute(data);
-      $('resultCard').classList.remove('hidden');
-      $('breakdown').innerHTML = `
-        <div>ارزش طلای خالص: ${currency(res.goldValue)} تومان</div>
-        <div>اجرت (${data.makingPercent}%): ${currency(res.makingTotal)} تومان</div>
+// محاسبه و نمایش breakdown با گرم
+$('calcPrice').addEventListener('click', ()=>{
+    const data = readForm();
+    const res = compute(data);
+    $('resultCard').classList.remove('hidden');
+    $('breakdown').innerHTML = `
+        <div>ارزش طلای خالص: ${currency(res.goldValue)} تومان (${res.goldValueGram} گرم)</div>
+        <div>اجرت (${data.makingPercent}%): ${currency(res.makingTotal)} تومان (${res.makingTotalGram} گرم)</div>
         <div>جمع قبل سود: ${currency(res.subtotal)} تومان</div>
-        <div>سود (${data.profitPercent}%): ${currency(res.profit)} تومان</div>
-        <div>مالیات (${data.vatPercent}%): ${currency(res.vat)} تومان</div>
-        <div class="font-bold text-lg">قیمت نهایی: ${currency(res.total)} تومان</div>
-      `;
-    });
+        <div>سود (${data.profitPercent}%): ${currency(res.profit)} تومان (${res.profitGram} گرم)</div>
+        <div>مالیات (${data.vatPercent}%): ${currency(res.vat)} تومان (${res.vatGram} گرم)</div>
+        <div class="font-bold text-lg">قیمت نهایی: ${currency(res.total)} تومان (${res.totalGram} گرم)</div>
+    `;
+});
 
-    $('saveSale').addEventListener('click', ()=>{
-      const form = readForm();
-      const res = compute(form);
-      const sale = {
+// ثبت فروش
+$('saveSale').addEventListener('click', ()=>{
+    const form = readForm();
+    const res = compute(form);
+    const sale = {
         id: Date.now(),
         date: $('saleDate').value || new Date().toISOString(),
         customer: $('customerName').value || 'عمومی',
@@ -243,151 +255,110 @@
         vat: res.vat,
         total: res.total,
         note: $('note').value || ''
-      };
-      txns.push(sale);
-      localStorage.setItem(ls.txns, JSON.stringify(txns));
-      localStorage.setItem(ls.price, $('pricePerGram').value);
-      updateUI();
-      alert('فروش ثبت شد ✅');
-    });
-
-    $('openTxns').addEventListener('click', ()=>{ $('txnsModal').classList.remove('hidden'); renderTxns(); });
-    $('closeTxns').addEventListener('click', ()=>{ $('txnsModal').classList.add('hidden'); });
-
-    function renderTxns(){
-      $('txnsTable').innerHTML='';
-      txns.slice().reverse().forEach(t=>{
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${t.date}</td>
-                        <td>${t.customer}</td>
-                        <td>${t.weight}</td>
-                        <td>${t.karat}</td>
-                        <td>${currency(t.subtotal)}</td>
-                        <td>${currency(t.profit)}</td>
-                        <td>${currency(t.vat)}</td>
-                        <td>${currency(t.total)}</td>`;
-        $('txnsTable').appendChild(tr);
-      });
-      $('txnCount').innerText = txns.length;
-    }
-
-    function download(filename, content){
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(new Blob([content],{type:'text/csv;charset=utf-8;'}));
-      a.download = filename; a.click();
-    }
-
-    $('exportCsv').addEventListener('click', ()=>{
-      if(!txns.length){ alert('هیچ تراکنشی وجود ندارد'); return; }
-      const rows = [['id','date','customer','weight','karat','subtotal','profit','vat','total','note']];
-      txns.forEach(t=> rows.push([t.id,t.date,t.customer,t.weight,t.karat,t.subtotal,t.profit,t.vat,t.total,t.note]));
-      const csv = rows.map(r=> r.join(',')).join('\n');
-      download('txns.csv', csv);
-    });
-
-    $('importCsv').addEventListener('change', e=>{
-      const file = e.target.files[0];
-      if(!file) return;
-      const reader = new FileReader();
-      reader.onload = ev=>{
-        const lines = ev.target.result.split('\n').slice(1);
-        lines.forEach(l=>{
-          const c = l.split(',');
-          if(c.length >= 9){
-            txns.push({
-              id: c[0], date: c[1], customer: c[2],
-              weight: Number(c[3]), karat: c[4],
-              subtotal: Number(c[5]), profit: Number(c[6]),
-              vat: Number(c[7]), total: Number(c[8]), note: c[9]||''
-            });
-          }
-        });
-        localStorage.setItem(ls.txns, JSON.stringify(txns));
-        updateUI();
-        alert('CSV وارد شد ✅');
-      };
-      reader.readAsText(file);
-    });
-
-    let salesChart = null;
-    function renderChart(){
-      const ctx = $('salesChart').getContext('2d');
-      const grouped = {};
-      txns.forEach(t=>{ grouped[t.date.slice(0,10)] = (grouped[t.date.slice(0,10)]||0) + Number(t.total); });
-      const labels = Object.keys(grouped).slice(-12);
-      const data = labels.map(l=> grouped[l]);
-      if(salesChart) salesChart.destroy();
-      salesChart = new Chart(ctx,{ type:'line', data:{ labels, datasets:[{ label:'فروش (تومان)', data }] } });
-    }
-
-    $('toggleTheme').addEventListener('click', ()=>{ document.body.classList.toggle('bg-neutral-50'); document.body.classList.toggle('text-slate-900'); });
-    $('resetData').addEventListener('click', ()=>{ if(confirm('پاک شود؟')){ localStorage.clear(); txns=[]; updateUI(); } });
-
-    function updateUI(){
-      $('txnCount').innerText = txns.length;
-      const totalSales = txns.reduce((s,t)=>s+(Number(t.total)||0),0);
-      $('summaryNet').innerText = currency(totalSales)+' تومان';
-      renderChart();
-    }
+    };
+    txns.push(sale);
+    localStorage.setItem(ls.txns, JSON.stringify(txns));
+    localStorage.setItem(ls.price, $('pricePerGram').value);
     updateUI();
-    $('previewInvoice').addEventListener('click', ()=>{
-  const form = readForm();          
-  const res = compute(form);         
-  
-  const customer = $('customerName').value || 'عمومی';
-  const gender = $('gender') ? $('gender').value : ''; // خانم/آقا
-  const nationalId = $('nationalId') ? $('nationalId').value : '';
-  const date = $('saleDate').value ? new Date($('saleDate').value).toLocaleString() : new Date().toLocaleString();
-  const note = $('note').value || '';
-  const pricePerGram = form.pricePerGram || 0;
-  const purity = purityFactor(form.karat);
-  
-  $('invoiceContent').innerHTML = `
-    <h2 class="text-2xl font-bold mb-4 text-center">فاکتور فروش طلا</h2>
-    
-    <div class="grid grid-cols-2 gap-2 mb-2">
-      <div><strong>خریدار:</strong> ${customer} ${gender}</div>
-      <div><strong>کد ملی:</strong> ${nationalId}</div>
-      <div><strong>تاریخ:</strong> ${date.split(',')[0]}</div>
-      <div><strong>ساعت:</strong> ${date.split(',')[1]}</div>
-      <div class="col-span-2"><strong>توضیحات و شماره فاکتور:</strong> ${note}</div>
-      <div><strong>نرخ روز (تومان):</strong> ${currency(pricePerGram)}</div>
-      <div><strong>فی ابشده (تومان):</strong> ${currency(res.total)}</div>
-    </div>
-    
-    <hr class="my-2">
-    
-    <table class="w-full border border-slate-400 text-right small mb-2">
-      <thead class="bg-slate-200 text-black">
-        <tr>
-          <th class="border border-slate-400 px-2">نوع طلا</th>
-          <th class="border border-slate-400 px-2">عیار</th>
-          <th class="border border-slate-400 px-2">گرم</th>
-          <th class="border border-slate-400 px-2">اجرت</th>
-          <th class="border border-slate-400 px-2">مبلغ کل</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td class="border border-slate-400 px-2">.......</td>
-          <td class="border border-slate-400 px-2">${form.karat}</td>
-          <td class="border border-slate-400 px-2">${form.weight} گرم</td>
-          <td class="border border-slate-400 px-2">${currency(res.makingTotal)}</td>
-          <td class="border border-slate-400 px-2 font-bold">${currency(res.total)}</td>
-        </tr>
-      </tbody>
-    </table>
-    
-    <div class="text-right font-bold mt-2">
-      <div>مالیات بر ارزش افزوده (9٪): ${currency(res.vat)}</div>
-      <div class="text-lg mt-1">مبلغ نهایی: ${currency(res.total)} تومان</div>
-    </div>
-  `;
-  
-  $('invoice').classList.remove('hidden');  
+    alert('فروش ثبت شد ✅');
 });
 
-  </script>
+// نمایش تراکنش‌ها
+$('openTxns').addEventListener('click', ()=>{ $('txnsModal').classList.remove('hidden'); renderTxns(); });
+$('closeTxns').addEventListener('click', ()=>{ $('txnsModal').classList.add('hidden'); });
+
+function renderTxns(){
+    $('txnsTable').innerHTML='';
+    txns.slice().reverse().forEach(t=>{
+        const tr = document.createElement('tr');
+tr.innerHTML = `<td>${t.date}</td>
+                <td>${t.customer}</td>
+                <td>${t.weight} گرم</td>
+                <td>${t.karat}</td>
+                <td>${currency(t.subtotal)} (${(t.subtotal / $('pricePerGram').value / (t.karat/24)).toFixed(3)} گرم)</td>
+                <td>${currency(t.profit)} (${(t.profit / $('pricePerGram').value / (t.karat/24)).toFixed(3)} گرم)</td>
+                <td>${currency(t.vat)} (${(t.vat / $('pricePerGram').value / (t.karat/24)).toFixed(3)} گرم)</td>
+                <td>${currency(t.total)} (${(t.total / $('pricePerGram').value / (t.karat/24)).toFixed(3)} گرم)</td>`;
+
+        $('txnsTable').appendChild(tr);
+    });
+    $('txnCount').innerText = txns.length;
+}
+
+// خروجی CSV
+$('exportCsv').addEventListener('click', ()=>{
+    if(!txns.length){ alert('هیچ تراکنشی وجود ندارد'); return; }
+    const rows = [['id','date','customer','weight','karat','subtotal','profit','vat','total','note']];
+    txns.forEach(t=> rows.push([t.id,t.date,t.customer,t.weight,t.karat,t.subtotal,t.profit,t.vat,t.total,t.note]));
+    const csv = rows.map(r=> r.join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
+    a.download = 'txns.csv'; a.click();
+});
+
+// پیش‌نمایش فاکتور با گرم
+$('previewInvoice').addEventListener('click', ()=>{
+    const form = readForm();          
+    const res = compute(form);         
+
+    const customer = $('customerName').value || 'عمومی';
+    const gender = $('gender') ? $('gender').value : '';
+    const nationalId = $('nationalId') ? $('nationalId').value : '';
+    const date = $('saleDate').value ? new Date($('saleDate').value).toLocaleString() : new Date().toLocaleString();
+    const note = $('note').value || '';
+
+    $('invoiceContent').innerHTML = `
+        <h2 class="text-2xl font-bold mb-4 text-center">فاکتور فروش طلا</h2>
+        <div class="grid grid-cols-2 gap-2 mb-2">
+            <div><strong>خریدار:</strong> ${customer} ${gender}</div>
+            <div><strong>کد ملی:</strong> ${nationalId}</div>
+            <div><strong>تاریخ:</strong> ${date.split(',')[0]}</div>
+            <div><strong>ساعت:</strong> ${date.split(',')[1]}</div>
+            <div class="col-span-2"><strong>توضیحات و شماره فاکتور:</strong> ${note}</div>
+            <div><strong>نرخ روز (تومان):</strong> ${currency(form.pricePerGram)}</div>
+            <div><strong>فی آبشده (تومان/گرم):</strong> ${currency(res.goldValue)} تومان (${res.goldValueGram} گرم)</div>
+        </div>
+
+        <hr class="my-2">
+
+        <table class="w-full border border-slate-400 text-right small mb-2">
+          <thead class="bg-slate-200 text-black">
+            <tr>
+              <th class="border border-slate-400 px-2">نوع طلا</th>
+              <th class="border border-slate-400 px-2">عیار</th>
+              <th class="border border-slate-400 px-2">گرم</th>
+              <th class="border border-slate-400 px-2">اجرت</th>
+              <th class="border border-slate-400 px-2">مبلغ کل</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="border border-slate-400 px-2">.......</td>
+              <td class="border border-slate-400 px-2">${form.karat}</td>
+              <td class="border border-slate-400 px-2">${form.weight} گرم</td>
+              <td class="border border-slate-400 px-2">${currency(res.makingTotal)} (${res.makingTotalGram} گرم)</td>
+              <td class="border border-slate-400 px-2 font-bold">${currency(res.total)} (${res.totalGram} گرم)</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="text-right font-bold mt-2">
+          <div>مالیات بر ارزش افزوده (${form.vatPercent || 0}٪): ${currency(res.vat)} (${res.vatGram} گرم)</div>
+          <div class="text-lg mt-1">فی فروش: ${currency(res.total)} تومان (${res.totalGram} گرم)</div>
+        </div>
+    `;
+
+    $('invoice').classList.remove('hidden');
+});
+
+function updateUI(){
+    $('txnCount').innerText = txns.length;
+    const totalSales = txns.reduce((s,t)=>s+(Number(t.total)||0),0);
+    $('summaryNet').innerText = currency(totalSales)+' تومان';
+}
+updateUI();
+</script>
+
   <!-- بخش پیش‌فاکتور -->
 
 </body>
